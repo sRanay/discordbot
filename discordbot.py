@@ -1,70 +1,73 @@
 import random
 import asyncio
-import aiohttp
-import json
-from discord import Game
-from discord.ext.commands import Bot
+import discord
 from discord.ext import commands
+from itertools import cycle
 
 # Discord Bot Token
 TOKEN = "NDYzNTk4NzQ1NDkwMjkyNzM2.Dhz-ZA.wl-tqxvxSuIRFu1IMjKPxLmSktk"
 
-BOT_PREFIX = "?"
+BOT_PREFIX = "."
 client = commands.Bot(command_prefix=BOT_PREFIX)
+status = ['Msg1', 'Msg2', 'Msg3']
 
-@client.command(name='8ball',
-                description="Answers a yes/no question.",
-                brief="Answers from the beyond.",
-                aliases=['eight_ball', 'eightball', '8-ball'],
-                pass_context=True)
-async def eight_ball(context):
-    possible_responses = [
-        'That is a resounding no',
-        'It is not looking likely',
-        'Too hard to tell',
-        'It is quite possible',
-        'Definitely',
-    ]
-    await client.say(random.choice(possible_responses) + ", " + context.message.author.mention)
+async def change_status():
+    await client.wait_until_ready()
+    msgs = cycle(status)
 
+    # If the bot is up
+    while not client.is_closed:
+        current_status = next(msgs) # Gets the next message
+        await client.change_presence(game=discord.Game(name=current_status)) # Set it to the current status
+        await asyncio.sleep(5) # Change the status message based every 5 seconds
 
-# Messages that the discord will reply to
-"""@client.event
-async def on_message(message):
-    # we do not want the bot to reply to itself
-    if message.author == client.user:
-        return
+# clear command
+@client.command(pass_context=True)
+async def clear(ctx, amount=100):
+    channel = ctx.message.channel
+    messages = []
+    # It will delete every message that is not long than 14 days
+    # It will only delete 100 messages from the channel
+    async for message in client.logs_from(channel, limit=int(amount)):
+        messages.append(message)
+    await client.delete_messages(messages)
+    await client.say("Messages Deleted")
 
-    # If message starts with "!hello"
-    if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        # Print the message back to the text channel
-        await client.send_message(message.channel, msg)
+@client.command()
+async def displayembed():
+    embed = discord.Embed(
+        title = 'Title', # The title of the embed
+        description = 'This is a description.', # Description of the embed
+        colour = discord.Colour.blue() # The color of the embed at the side
+    )
 
-    # If message starts with "oof" or "OOF"
-    if message.content.startswith('oof') or message.content.startswith('OOF'):
-        msg = 'OOF'
-        # Print the message back to the text channel
-        await client.send_message(message.channel, msg)"""
+    # Embed Settings
+    embed.set_footer(text='This is a footer.') #Appears below the image
+    embed.set_image(url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Appears above the Footer
+    embed.set_thumbnail(url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Thumbnail of the embed
+    embed.set_author(name='Author Name',
+        icon_url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Set the Author Name and Icon
+    # inline will determine whether the Field are in the same line
+    embed.add_field(name='Field Name', value='Field Value', inline=False)
+    embed.add_field(name='Field Name', value='Field Value', inline=True)
+    embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+    await client.say(embed=embed)
+
+#On member join
+@client.event
+async def on_member_join(member):
+    # Set the role to be normal
+    role = discord.utils.get(member.server.roles, name='Normal')
+    # Implement it for the current member that is joining
+    await client.add_roles(member,role)
 
 # Starting up the discord bot
 @client.event
 async def on_ready():
-    await client.change_presence(game=Game(name="with humans"))
-    print('--------')
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('--------')
+    print('Bot is ready')
 
-async def list_servers():
-    await client.wait_until_ready()
-    while not client.is_closed:
-        print("Current servers:")
-        for server in client.servers:
-            print(server.name)
-        await asyncio.sleep(600)
 
 # Running the bot
-client.loop.create_task(list_servers())
+client.loop.create_task(change_status())
 client.run(TOKEN)
