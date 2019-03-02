@@ -7,10 +7,15 @@ from itertools import cycle
 # Discord Bot Token
 TOKEN = "NDYzNTk4NzQ1NDkwMjkyNzM2.Dhz-ZA.wl-tqxvxSuIRFu1IMjKPxLmSktk"
 
+#Creating the client Object
 BOT_PREFIX = "."
 client = commands.Bot(command_prefix=BOT_PREFIX)
+client.remove_command('help')
+
+#Creating the list of status messages
 status = ['Msg1', 'Msg2', 'Msg3']
 
+# Change status once in a while
 async def change_status():
     await client.wait_until_ready()
     msgs = cycle(status)
@@ -21,6 +26,15 @@ async def change_status():
         await client.change_presence(game=discord.Game(name=current_status)) # Set it to the current status
         await asyncio.sleep(5) # Change the status message based every 5 seconds
 
+# Speak something once in a while
+async def change_message():
+    await client.wait_until_ready()
+
+    while not client.is_closed:
+        await client.say("FK LAHHHHHH")
+        await asyncio.sleep(3)
+
+#Start of Commands
 # clear command
 @client.command(pass_context=True)
 async def clear(ctx, amount=100):
@@ -33,6 +47,7 @@ async def clear(ctx, amount=100):
     await client.delete_messages(messages)
     await client.say("Messages Deleted")
 
+#Embed Function/Command
 @client.command()
 async def displayembed():
     embed = discord.Embed(
@@ -54,6 +69,24 @@ async def displayembed():
 
     await client.say(embed=embed)
 
+@client.command(pass_context=True)
+async def help(ctx):
+    author = ctx.message.author
+
+    embed = discord.Embed(
+        colour = discord.Colour.orange()
+    )
+
+    embed.set_author(name='Help')
+    # List of Commands Help
+    embed.add_field(name='clear', value='Clear the latest 100 messages less than 14 days ago', inline=False)
+    embed.add_field(name='displayembed', value='Display the template for embed', inline=False)
+
+    await client.send_message(author, embed=embed)
+
+
+
+#Start of Events 
 #On member join
 @client.event
 async def on_member_join(member):
@@ -70,4 +103,5 @@ async def on_ready():
 
 # Running the bot
 client.loop.create_task(change_status())
+client.loop.create_task(change_message())
 client.run(TOKEN)
