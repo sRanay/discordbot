@@ -1,6 +1,8 @@
 import random
 import asyncio
 import discord
+import opuslib
+import youtube_dl
 from discord.ext import commands
 from itertools import cycle
 
@@ -14,6 +16,19 @@ client.remove_command('help')
 
 #Creating the list of status messages
 status = ['Msg1', 'Msg2', 'Msg3']
+
+# Store instance of players
+players = {}
+
+# Store the Queues
+queues = {}
+
+# Check the music bot queue
+def check_queue(serverid):
+    if queues[serverid] != []:
+        player = queues[serverid].pop(0)
+        players[serverid] = player
+        player.start()
 
 # Change status once in a while
 async def change_status():
@@ -86,18 +101,70 @@ async def help(ctx):
 
     await client.send_message(author, embed=embed)
 
-# Join Function
+# Join Command
 @client.command(pass_context=True)
 async def join(ctx):
     channel = ctx.message.author.voice.voice_channel
     await client.join_voice_channel(channel)
 
-# Leave Function
+# Leave Command
 @client.command(pass_context=True)
 async def leave(ctx):
     server = ctx.message.server
     voice_client = client.voice_client_in(server)
     await voice_client.disconnect()
+
+# Music Bot Functions
+# play - Play the music given the URL
+# pause - Pause the current music
+# stop - Stop the current music
+# resume - Resume the current music
+
+# play Command
+@client.command(pass_context=True)
+async def play(ctx, url):
+    server = ctx.message.server
+    voice_client = client.voice_client_in(server)
+    player = await voice_client.create_ytdl_player(url, after=lambda: check_queue(server.id))
+    players[server.id] = player
+    player.start()
+
+# pause Command
+@client.command(pass_context=True)
+async def pause(ctx):
+    serverid = ctx.message.server.id
+    players[serverid].pause()
+
+# stop Command
+@client.command(pass_context=True)
+async def stop(ctx):
+    serverid = ctx.message.server.id
+    players[serverid].stop()
+
+# resume Command
+@client.command(pass_context=True)
+async def resume(ctx):
+    serverid = ctx.message.server.id
+    players[serverid].resume()
+
+# loop Command
+@client.command(pass_context=True)
+async def loop(ctx):
+    serverid = ctx.message.server.id
+    players[serverid].loop()
+
+# queue Command
+@client.command(pass_context=True)
+async def queue(ctx, url):
+    server = ctx.message.server
+    voice_client = client.voice_client_in(server)
+    player = await voice_client.create_ytdl_player(url, after=lambda: check_queue(server.id))
+
+    if server.id in queues:
+        queues[server.id].append(player)
+    else:
+        queues[server.id] = [player]
+    await client.say('Video Queued.')
 
 # End of Commands
 
