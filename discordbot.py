@@ -15,7 +15,7 @@ client = commands.Bot(command_prefix=BOT_PREFIX)
 client.remove_command('help')
 
 #Creating the list of status messages
-status = ['Msg1', 'Msg2', 'Msg3']
+status = ['with my life', 'with my dong',]
 
 # Store instance of players
 players = {}
@@ -98,6 +98,8 @@ async def help(ctx):
     # List of Commands using Help
     embed.add_field(name='clear', value='Clear the latest 100 messages less than 14 days ago', inline=False)
     embed.add_field(name='displayembed', value='Display the template for embed', inline=False)
+    embed.add_field(name='join', value='Joins current channel', inline=False)
+    embed.add_field(name='leave', value='Leaves current channel', inline=False)
 
     await client.send_message(author, embed=embed)
 
@@ -113,6 +115,8 @@ async def leave(ctx):
     server = ctx.message.server
     voice_client = client.voice_client_in(server)
     await voice_client.disconnect()
+
+# Music Bot does not work now
 
 # Music Bot Functions
 # play - Play the music given the URL
@@ -146,12 +150,6 @@ async def stop(ctx):
 async def resume(ctx):
     serverid = ctx.message.server.id
     players[serverid].resume()
-
-# loop Command
-@client.command(pass_context=True)
-async def loop(ctx):
-    serverid = ctx.message.server.id
-    players[serverid].loop()
 
 # queue Command
 @client.command(pass_context=True)
