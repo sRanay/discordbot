@@ -23,12 +23,14 @@ players = {}
 # Store the Queues
 queues = {}
 
+"""
 # Check the music bot queue
 def check_queue(serverid):
     if queues[serverid] != []:
         player = queues[serverid].pop(0)
         players[serverid] = player
         player.start()
+"""
 
 # Change status once in a while
 async def change_status():
@@ -41,6 +43,7 @@ async def change_status():
         await client.change_presence(game=discord.Game(name=current_status)) # Set it to the current status
         await asyncio.sleep(5) # Change the status message based every 5 seconds
 
+"""
 # Speak something once in a while
 async def NormalMessage():
     await client.wait_until_ready()
@@ -49,6 +52,7 @@ async def NormalMessage():
     while not client.is_closed:
         await client.send_message(channel, "FK LAHHHHHHHHHHHHHHH")
         await asyncio.sleep(300)
+"""
 
 # Start of Commands
 # clear command
@@ -64,24 +68,19 @@ async def clear(ctx, amount=100):
     await client.say("Messages Deleted")
 
 # Embed Function/Command
-@client.command()
-async def displayembed():
+@client.command(pass_context=True)
+async def eventcreate(ctx, arg1, arg2):
+    author = ctx.message.author
     embed = discord.Embed(
-        title = 'Title', # The title of the embed
-        description = 'This is a description.', # Description of the embed
+        title = arg1, # The title of the embed
+        description = arg2, # Description of the embed
         colour = discord.Colour.blue() # The color of the embed at the side
     )
-
-    # Embed Settings
-    embed.set_footer(text='This is a footer.') #Appears below the image
-    embed.set_image(url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Appears above the Footer
-    embed.set_thumbnail(url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Thumbnail of the embed
-    embed.set_author(name='Author Name',
-        icon_url='http://www.personalbrandingblog.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640-300x300.png') #Set the Author Name and Icon
+    
     # inline will determine whether the Field are in the same line
-    embed.add_field(name='Field Name', value='Field Value', inline=False)
-    embed.add_field(name='Field Name', value='Field Value', inline=True)
-    embed.add_field(name='Field Name', value='Field Value', inline=True)
+    embed.add_field(name='Confirmed', value='None', inline=True)
+    embed.add_field(name='Reserve', value='None', inline=True)
+    embed.add_field(name='Created by', value=author, inline=False)
 
     await client.say(embed=embed)
 
@@ -102,7 +101,7 @@ async def help(ctx):
     embed.add_field(name='leave', value='Leaves current channel', inline=False)
 
     await client.send_message(author, embed=embed)
-
+"""
 # Join Command
 @client.command(pass_context=True)
 async def join(ctx):
@@ -163,7 +162,7 @@ async def queue(ctx, url):
     else:
         queues[server.id] = [player]
     await client.say('Video Queued.')
-
+"""
 # End of Commands
 
 # Start of Events 
@@ -196,5 +195,5 @@ async def on_ready():
 
 # Running the bot
 client.loop.create_task(change_status())
-client.loop.create_task(NormalMessage())
+#client.loop.create_task(NormalMessage())
 client.run(TOKEN)
