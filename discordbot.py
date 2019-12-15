@@ -1,199 +1,79 @@
-import random
-import asyncio
 import discord
-import opuslib
-import youtube_dl
-from discord.ext import commands
-from itertools import cycle
+import time
+import asyncio
 
 # Discord Bot Token
 TOKEN = "NDYzNTk4NzQ1NDkwMjkyNzM2.Dhz-ZA.wl-tqxvxSuIRFu1IMjKPxLmSktk"
 
-#Creating the client Object
-BOT_PREFIX = "."
-client = commands.Bot(command_prefix=BOT_PREFIX)
-client.remove_command('help')
+# Creating the client Object
+client = discord.Client()
 
-#Creating the list of status messages
-status = ['with my life', 'with my dong',]
+joined = messages = 0
 
-# Store instance of players
-players = {}
-
-# Store the Queues
-queues = {}
-
-"""
-# Check the music bot queue
-def check_queue(serverid):
-    if queues[serverid] != []:
-        player = queues[serverid].pop(0)
-        players[serverid] = player
-        player.start()
-"""
-
-# Change status once in a while
-async def change_status():
+async def update_stats():
     await client.wait_until_ready()
-    msgs = cycle(status)
+    global messages, joined
 
-    # If the bot is up
-    while not client.is_closed:
-        current_status = next(msgs) # Gets the next message
-        await client.change_presence(game=discord.Game(name=current_status)) # Set it to the current status
-        await asyncio.sleep(5) # Change the status message based every 5 seconds
+    while not client.is_closed():
+        try:
+            with open("stats.txt","a") as f:
+                f.write(f"Time: {int(time.time())}, Messages: {messages}, Members Joined: {joined}\n")
 
-"""
-# Speak something once in a while
-async def NormalMessage():
-    await client.wait_until_ready()
-    channel = client.get_channel("456983229032038421")
+                messages = 0
+                joined = 0
 
-    while not client.is_closed:
-        await client.send_message(channel, "FK LAHHHHHHHHHHHHHHH")
-        await asyncio.sleep(300)
-"""
+                await asyncio.sleep(5)
+        except Exception as e:
+            print(e)
+            await asyncio.sleep(5)
 
-# Start of Commands
-# clear command
-@client.command(pass_context=True)
-async def clear(ctx, amount=100):
-    channel = ctx.message.channel
-    messages = []
-    # It will delete every message that is not long than 14 days
-    # It will only delete 100 messages from the channel
-    async for message in client.logs_from(channel, limit=int(amount)):
-        messages.append(message)
-    await client.delete_messages(messages)
-    await client.say("Messages Deleted")
+@client.event
+async def on_member_update(before, after):
+    n = after.nick
+    if n: # Check if they updated their username
+        if n.lower().count("tim") > 0: # If username contiains tim
+            last = before.nick
+            if last:
+                await after.edit(nick=last)
+            else:
+                await after.edit(nick="NO STOP THAT")
 
-# Embed Function/Command
-@client.command(pass_context=True)
-async def eventcreate(ctx, arg1, arg2):
-    author = ctx.message.author
-    embed = discord.Embed(
-        title = arg1, # The title of the embed
-        description = arg2, # Description of the embed
-        colour = discord.Colour.blue() # The color of the embed at the side
-    )
-    
-    # inline will determine whether the Field are in the same line
-    embed.add_field(name='Confirmed', value='None', inline=True)
-    embed.add_field(name='Reserve', value='None', inline=True)
-    embed.add_field(name='Created by', value=author, inline=False)
-
-    await client.say(embed=embed)
-
-# Help Function
-@client.command(pass_context=True)
-async def help(ctx):
-    author = ctx.message.author
-
-    embed = discord.Embed(
-        colour = discord.Colour.orange()
-    )
-
-    embed.set_author(name='Help')
-    # List of Commands using Help
-    embed.add_field(name='clear', value='Clear the latest 100 messages less than 14 days ago', inline=False)
-    embed.add_field(name='displayembed', value='Display the template for embed', inline=False)
-    embed.add_field(name='join', value='Joins current channel', inline=False)
-    embed.add_field(name='leave', value='Leaves current channel', inline=False)
-
-    await client.send_message(author, embed=embed)
-"""
-# Join Command
-@client.command(pass_context=True)
-async def join(ctx):
-    channel = ctx.message.author.voice.voice_channel
-    await client.join_voice_channel(channel)
-
-# Leave Command
-@client.command(pass_context=True)
-async def leave(ctx):
-    server = ctx.message.server
-    voice_client = client.voice_client_in(server)
-    await voice_client.disconnect()
-
-# Music Bot does not work now
-
-# Music Bot Functions
-# play - Play the music given the URL
-# pause - Pause the current music
-# stop - Stop the current music
-# resume - Resume the current music
-
-# play Command
-@client.command(pass_context=True)
-async def play(ctx, url):
-    server = ctx.message.server
-    voice_client = client.voice_client_in(server)
-    player = await voice_client.create_ytdl_player(url, after=lambda: check_queue(server.id))
-    players[server.id] = player
-    player.start()
-
-# pause Command
-@client.command(pass_context=True)
-async def pause(ctx):
-    serverid = ctx.message.server.id
-    players[serverid].pause()
-
-# stop Command
-@client.command(pass_context=True)
-async def stop(ctx):
-    serverid = ctx.message.server.id
-    players[serverid].stop()
-
-# resume Command
-@client.command(pass_context=True)
-async def resume(ctx):
-    serverid = ctx.message.server.id
-    players[serverid].resume()
-
-# queue Command
-@client.command(pass_context=True)
-async def queue(ctx, url):
-    server = ctx.message.server
-    voice_client = client.voice_client_in(server)
-    player = await voice_client.create_ytdl_player(url, after=lambda: check_queue(server.id))
-
-    if server.id in queues:
-        queues[server.id].append(player)
-    else:
-        queues[server.id] = [player]
-    await client.say('Video Queued.')
-"""
-# End of Commands
-
-# Start of Events 
-
-# On member join
 @client.event
 async def on_member_join(member):
-    # Set the role to be normal
-    role = discord.utils.get(member.server.roles, name='Normal')
-    # Implement it for the current member that is joining
-    await client.add_roles(member,role)
-
-# Reaction
-@client.event
-async def on_reaction_add(reaction,user):
-    channel = reaction.message.channel
-    await client.send_message(channel, '{} has added {} to the messasge: {}'.format(user.name, reaction.emoji, reaction.message.content))
+    global joined
+    joined += 1
+    for channel in member.guild.channels:
+        if str(channel) == "general":
+            await channel.send_message(f"""Welcome to the server {member.mention}""")
 
 @client.event
-async def on_reaction_remove(reaction,user):
-    channel = reaction.message.channel
-    await client.send_message(channel, '{} has removed {} from the messasge: {}'.format(user.name, reaction.emoji, reaction.message.content))
+async def on_message(message):
+    global messages
+    messages += 1
+    id = client.get_guild(456983227899314178)
+    channels = ['bot-commands', 'discord-bot-test']
+    valid_users = ['Ranay#8872']
+    bad_words = ['bad','stop','45']
 
-# End of Events
+    # Removing words in the bad list
+    for word in bad_words:
+        if message.content.count(word) > 0:
+            print("A bad word was said")
+            await message.channel.purge(limit=1)
 
-# Starting up the discord bot
-@client.event
-async def on_ready():
-    print('Bot is ready')
+    if message.content == "!help":
+        embed = discord.Embed(title="Help on BOT", description="Some useful commands")
+        embed.add_field(name="!hello", value="Greets the user")
+        embed.add_field(name="!users", value="Prints number of users", inline=False)
+        await message.channel.send(content=None, embed=embed)
 
-# Running the bot
-client.loop.create_task(change_status())
-#client.loop.create_task(NormalMessage())
+    if str(message.channel) in channels and str(message.author) in valid_users:
+        if message.content.find("!hello") != -1:
+            await message.channel.send("Hi") #If user says !hello, will send back hi
+        elif message.content == "!users":
+            await message.channel.send(f"""# of Members: {id.member_count}""")
+
+
+# Running the Bot
+client.loop.create_task(update_stats())
 client.run(TOKEN)
