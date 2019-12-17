@@ -1,57 +1,78 @@
 import discord
 import time
 import asyncio
+import random
+
+from discord.ext import commands
 
 # Discord Bot Token
 TOKEN = "NDYzNTk4NzQ1NDkwMjkyNzM2.Dhz-ZA.wl-tqxvxSuIRFu1IMjKPxLmSktk"
 
 # Creating the client Object
-client = discord.Client()
+client = commands.Bot(command_prefix=".")
+client.remove_command("help")
 
-joined = messages = 0
+# Discord Command
 
-async def update_stats():
-    await client.wait_until_ready()
-    global messages, joined
+@client.command(pass_context=True)
+async def help(ctx):
+    embed = discord.Embed(title="Help on BOT", description="Some useful commands")
+    embed.add_field(name=".hello", value="Greets the user")
+    embed.add_field(name=".users", value="Prints number of users", inline=False)
+    embed.add_field(name=".userinfo", value="Print the user info of member", inline=False)
+    embed.add_field(name=".echo", value="Repeats the statement", inline=False)
+    embed.add_field(name=".help", value="Print out this page", inline=False)
+    await ctx.channel.send(content=None, embed=embed)
 
-    while not client.is_closed():
-        try:
-            with open("stats.txt","a") as f:
-                f.write(f"Time: {int(time.time())}, Messages: {messages}, Members Joined: {joined}\n")
+@client.command(pass_context=True)
+async def hello(ctx):
+    await ctx.channel.send("Hi") #If user says !hello, will send back hi
 
-                messages = 0
-                joined = 0
+@client.command(pass_context=True)
+async def users(ctx):
+    id = client.get_guild(456983227899314178)
+    await ctx.channel.send(f"""# of Members: {id.member_count}""")
 
-                await asyncio.sleep(5)
-        except Exception as e:
-            print(e)
-            await asyncio.sleep(5)
+@client.command(aliases=['echo'])
+async def say(ctx, *, words: commands.clean_content):
+    await ctx.send(words)
 
-@client.event
-async def on_member_update(before, after):
-    n = after.nick
-    if n: # Check if they updated their username
-        if n.lower().count("tim") > 0: # If username contiains tim
-            last = before.nick
-            if last:
-                await after.edit(nick=last)
-            else:
-                await after.edit(nick="NO STOP THAT")
+# Prints out user information
+@client.command()
+async def userinfo(ctx, member: discord.Member):
+    roles = [role for role in member.roles]
 
+    embed = discord.Embed(colour=member.color, timestamp=ctx.message.created_at)
+    embed.set_author(name=f'User Info - {member}')
+    embed.set_thumbnail(url=member.avatar_url)
+    embed.set_footer(text=f'Requested by {ctx.author}', icon_url=ctx.author.avatar_url)
+    
+    embed.add_field(name="ID: ", value=member.id)
+    embed.add_field(name="Guild name: ", value=member.display_name)
+    
+    embed.add_field(name="Created at: ", value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+    embed.add_field(name="Joined at: ", value=member.joined_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"))
+
+    embed.add_field(name=f"Roles ({len(roles)})", value=" ".join([role.mention for role in roles]))
+    embed.add_field(name="Top role: ", value=member.top_role.mention)
+
+    embed.add_field(name="Bot?", value=member.bot)
+
+    await ctx.send(embed=embed)
+
+# End of Discord Command
+
+# Discord event
 @client.event
 async def on_member_join(member):
-    global joined
-    joined += 1
     for channel in member.guild.channels:
         if str(channel) == "general":
             await channel.send_message(f"""Welcome to the server {member.mention}""")
 
 @client.event
 async def on_message(message):
-    global messages
-    messages += 1
     id = client.get_guild(456983227899314178)
-    channels = ['bot-commands', 'discord-bot-test']
+    channels = ['bot-commands', 'discord-bot-test','bot-command']
     valid_users = ['Ranay#8872']
     bad_words = ['bad','stop','45']
 
@@ -61,19 +82,9 @@ async def on_message(message):
             print("A bad word was said")
             await message.channel.purge(limit=1)
 
-    if message.content == "!help":
-        embed = discord.Embed(title="Help on BOT", description="Some useful commands")
-        embed.add_field(name="!hello", value="Greets the user")
-        embed.add_field(name="!users", value="Prints number of users", inline=False)
-        await message.channel.send(content=None, embed=embed)
+    await client.process_commands(message)
 
-    if str(message.channel) in channels and str(message.author) in valid_users:
-        if message.content.find("!hello") != -1:
-            await message.channel.send("Hi") #If user says !hello, will send back hi
-        elif message.content == "!users":
-            await message.channel.send(f"""# of Members: {id.member_count}""")
-
+# End of Discord Event
 
 # Running the Bot
-client.loop.create_task(update_stats())
 client.run(TOKEN)
