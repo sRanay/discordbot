@@ -1,8 +1,7 @@
 # discordbot
 
-Tools need to install:
-sudo apt-get install opus-tools
+Ranay's Bot
 
-Python Libraries to install
-pip3 install discord.py
-pip3 install opuslib
+Written in discord.py rewrite
+
+Python3.6 is used to code the Bot
