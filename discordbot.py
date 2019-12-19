@@ -26,6 +26,9 @@ async def help(ctx):
     embed.add_field(name=".users", value="Prints number of users", inline=False)
     embed.add_field(name=".userinfo", value="Print the user info of member", inline=False)
     embed.add_field(name=".echo", value="Repeats the statement", inline=False)
+    embed.add_field(name=".join", value="Joins the channel", inline=False)
+    embed.add_field(name=".leave", value="Leaves the channel", inline=False)
+    embed.add_field(name=".play", value="Plays the current song", inline=False) 
     embed.add_field(name=".help", value="Print out this page", inline=False)
     await ctx.channel.send(content=None, embed=embed)
 
