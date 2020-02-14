@@ -144,8 +144,11 @@ async def play(ctx, url: str):
     voice.play(discord.FFmpegPCMAudio("song.mp3"), after=lambda e: print(f"{name} has finished playing"))
     voice.source = discord.PCMVolumeTransformer(voice.source)
     voice.source.volume = 0.07
+    print("Playing "+ name +"\n")
 
-    print("playing\n")
+@client.command(pass_context=True)
+async def kill(ctx):
+    await client.logout()
 
 # End of Discord Command
 
