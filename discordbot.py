@@ -148,6 +148,9 @@ async def play(ctx, url: str):
 
 @client.command(pass_context=True)
 async def kill(ctx):
+    print("------------------")
+    print("Bot Shutting Down")
+    await ctx.channel.purge(limit=1)
     await client.logout()
 
 # End of Discord Command
@@ -164,7 +167,7 @@ async def on_message(message):
     id = client.get_guild(456983227899314178)
     channels = ['bot-commands', 'discord-bot-test','bot-command']
     valid_users = ['Ranay#8872']
-    bad_words = ['bad','stop','45']
+    bad_words = ['bad','45']
 
     # Removing words in the bad list
     for word in bad_words:
@@ -174,7 +177,15 @@ async def on_message(message):
 
     await client.process_commands(message)
 
+@client.event
+async def on_ready():
+    print("---------------------------")
+    print("Bot Information")
+    print("Name: " + client.user.name)
+    print("ID: " + str(client.user.id))
+
 # End of Discord Event
 
 # Running the Bot
+print("Bot Starting Up")
 client.run(TOKEN)
