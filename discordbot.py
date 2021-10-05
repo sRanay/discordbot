@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.utils import get
 
 # Discord Bot Token
-TOKEN = "NDYzNTk4NzQ1NDkwMjkyNzM2.Dhz-ZA.wl-tqxvxSuIRFu1IMjKPxLmSktk"
+TOKEN = "<Discord Bot ID>"
 
 # Creating the client Object
 client = commands.Bot(command_prefix=".")
